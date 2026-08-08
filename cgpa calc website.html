@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MUJ CGPA Leaderboard | Wubba Lubba Dub Dub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --portal:#44ff88; --portal-bright:#00ffaa;
+    --space:#0a0e27; --space-mid:#1a1f3a;
+    --morty:#f4d35e; --rick-blue:#00b4d8;
+    --cosmic:#9d4edd;
+  }
+  *{font-family:'Space Grotesk',sans-serif}
+  body{
+    background:radial-gradient(ellipse at top,#1a1f3a 0%,#0a0e27 50%,#000 100%);
+    color:white;overflow-x:hidden;
+  }
+  .font-display{font-family:'Bangers',cursive;letter-spacing:2px}
+  .font-pixel{font-family:'Press Start 2P',monospace}
+
+  /* ===== STARS ===== */
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .star{position:absolute;background:white;border-radius:50%;animation:twinkle 3s infinite}
+  @keyframes twinkle{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+
+  /* ===== PORTAL RINGS ===== */
+  .portal-ring{
+    position:absolute;border-radius:50%;
+    border:3px solid transparent;
+    background:conic-gradient(from 0deg,transparent 0%,var(--portal) 25%,transparent 50%,var(--portal) 75%,transparent 100%);
+    -webkit-mask:radial-gradient(circle,transparent 60%,black 61%,black 70%,transparent 71%);
+    mask:radial-gradient(circle,transparent 60%,black 61%,black 70%,transparent 71%);
+    animation:portalSpin 6s linear infinite;
+    filter:drop-shadow(0 0 20px var(--portal));
+  }
+  @keyframes portalSpin{to{transform:rotate(360deg)}}
+
+  /* ===== GLITCH ===== */
+  .glitch{position:relative;display:inline-block}
+  .glitch::before,.glitch::after{
+    content:attr(data-text);position:absolute;top:0;left:0;
+    width:100%;height:100%;
+  }
+  .glitch::before{
+    color:var(--portal);animation:g1 2s infinite linear alternate-reverse;
+    clip-path:polygon(0 0,100% 0,100% 35%,0 35%);
+  }
+  .glitch::after{
+    color:var(--cosmic);animation:g2 1.5s infinite linear alternate-reverse;
+    clip-path:polygon(0 65%,100% 65%,100% 100%,0 100%);
+  }
+  @keyframes g1{
+    0%{transform:translate(0)}20%{transform:translate(-3px,3px)}
+    40%{transform:translate(-3px,-3px)}60%{transform:translate(3px,3px)}
+    80%{transform:translate(3px,-3px)}100%{transform:translate(0)}
+  }
+  @keyframes g2{
+    0%{transform:translate(0)}20%{transform:translate(3px,-3px)}
+    40%{transform:translate(3px,3px)}60%{transform:translate(-3px,-3px)}
+    80%{transform:translate(-3px,3px)}100%{transform:translate(0)}
+  }
+
+  /* ===== FLOAT ===== */
+  .float{animation:float 6s ease-in-out infinite}
+  .float-slow{animation:float 9s ease-in-out infinite}
+  .float-fast{animation:float 4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-25px) rotate(3deg)}}
+
+  /* ===== GLASS ===== */
+  .glass{
+    background:rgba(26,31,58,.5);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border:1px solid rgba(68,255,136,.2);
+    box-shadow:0 8px 32px rgba(0,0,0,.5);
+  }
+
+  /* ===== GLOW ===== */
+  .glow-text-green{text-shadow:0 0 20px rgba(68,255,136,.8),0 0 40px rgba(68,255,136,.4)}
+  .glow-text-yellow{text-shadow:0 0 20px rgba(244,211,94,.8),0 0 40px rgba(244,211,94,.4)}
+  .glow-text-cosmic{text-shadow:0 0 20px rgba(157,78,221,.8)}
+
+  /* ===== CURSOR PORTAL ===== */
+  .cursor-portal{
+    position:fixed;width:40px;height:40px;border-radius:50%;
+    background:radial-gradient(circle,rgba(68,255,136,.3),transparent 70%);
+    pointer-events:none;z-index:9999;
+    border:2px solid rgba(68,255,136,.4);
+    transition:transform .15s ease-out;
+    mix-blend-mode:screen;
+  }
+
+  /* ===== INPUTS ===== */
+  .input-field{
+    background:rgba(10,14,39,.7);border:1px solid rgba(68,255,136,.3);
+    color:white;padding:.75rem 1rem;border-radius:.5rem;
+    transition:all .3s;width:100%;
+  }
+  .input-field:focus{
+    outline:none;border-color:var(--portal);
+    box-shadow:0 0 25px rgba(68,255,136,.4);
+  }
+  .input-field::placeholder{color:rgba(255,255,255,.4)}
+
+  /* ===== BUTTONS ===== */
+  .btn-portal{
+    background:linear-gradient(135deg,#44ff88,#00b4d8);
+    color:#0a0e27;font-weight:700;padding:.85rem 1.75rem;
+    border-radius:.6rem;transition:all .3s;cursor:pointer;border:none;
+    position:relative;overflow:hidden;
+  }
+  .btn-portal::before{
+    content:'';position:absolute;top:50%;left:50%;
+    width:0;height:0;border-radius:50%;
+    background:rgba(255,255,255,.5);transform:translate(-50%,-50%);
+    transition:width .6s,height .6s;
+  }
+  .btn-portal:hover::before{width:300px;height:300px}
+  .btn-portal:hover{transform:translateY(-3px);box-shadow:0 15px 35px rgba(68,255,136,.5)}
+
+  .btn-secondary{
+    background:rgba(10,14,39,.6);border:1px solid rgba(68,255,136,.4);
+    color:white;padding:.85rem 1.75rem;border-radius:.6rem;
+    transition:all .3s;cursor:pointer;
+  }
+  .btn-secondary:hover{background:rgba(68,255,136,.1);transform:translateY(-2px)}
+
+  /* ===== YEAR TABS ===== */
+  .year-tab{
+    cursor:pointer;padding:.6rem 1.4rem;border-radius:.6rem;
+    transition:all .3s;background:rgba(10,14,39,.7);
+    border:1px solid rgba(68,255,136,.2);font-weight:500;
+  }
+  .year-tab.active{
+    background:linear-gradient(135deg,#44ff88,#00b4d8);
+    color:#0a0e27;font-weight:700;box-shadow:0 0 25px rgba(68,255,136,.5);
+  }
+  .year-tab:hover:not(.active){border-color:var(--portal);background:rgba(68,255,136,.1)}
+
+  /* ===== AVATARS ===== */
+  .avatar-rick{
+    background:linear-gradient(135deg,#44ff88,#00b4d8);color:#0a0e27;
+    box-shadow:0 0 20px rgba(68,255,136,.4);
+  }
+  .avatar-morty{
+    background:linear-gradient(135deg,#f4d35e,#ff9f1c);color:#5c2e00;
+    box-shadow:0 0 15px rgba(244,211,94,.3);
+  }
+
+  /* ===== TROPHY ===== */
+  .trophy{display:inline-block;animation:shine 2s infinite}
+  @keyframes shine{
+    0%,100%{filter:drop-shadow(0 0 5px gold)}
+    50%{filter:drop-shadow(0 0 25px gold) brightness(1.3)}
+  }
+
+  /* ===== SUBJECT ROW ===== */
+  .subject-row{
+    display:grid;grid-template-columns:2fr 1fr 1.5fr auto;
+    gap:.5rem;margin-bottom:.5rem;align-items:center;
+  }
+  @media(max-width:640px){.subject-row{grid-template-columns:1fr 1fr;gap:.4rem}}
+
+  /* ===== RANK BADGE ===== */
+  .rank-badge{
+    width:54px;height:54px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:1.25rem;flex-shrink:0;
+  }
+
+  /* ===== PODIUM ===== */
+  .podium-place{transition:all .4s cubic-bezier(.34,1.56,.64,1)}
+  .podium-place:hover{transform:translateY(-15px) scale(1.05)}
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar{width:10px}
+  ::-webkit-scrollbar-track{background:#0a0e27}
+  ::-webkit-scrollbar-thumb{background:linear-gradient(var(--portal),var(--rick-blue));border-radius:5px}
+
+  /* ===== RIPPLE ===== */
+  @keyframes ripple{to{transform:scale(4);opacity:0}}
+  .ripple-effect{position:absolute;border-radius:50%;background:rgba(68,255,136,.5);animation:ripple .6s linear}
+
+  /* ===== SCROLL INDICATOR ===== */
+  .scroll-ind{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);animation:bounce 2s infinite}
+  @keyframes bounce{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,15px)}}
+
+  /* ===== CONFETTI ===== */
+  .confetti{position:absolute;width:10px;height:14px;top:-20px;animation:cfall 3s linear forwards}
+  @keyframes cfall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+  html{scroll-behavior:smooth}
+
+  /* ===== MARQUEE ===== */
+  .marquee{overflow:hidden;white-space:nowrap}
+  .marquee span{display:inline-block;animation:marquee 20s linear infinite}
+  @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+  /* ===== GLOW PULSE ===== */
+  .pulse-glow{animation:pulseGlow 2s infinite}
+  @keyframes pulseGlow{
+    0%,100%{box-shadow:0 0 20px rgba(68,255,136,.4)}
+    50%{box-shadow:0 0 50px rgba(68,255,136,.8)}
+  }
+
+  /* ===== SNAKE BORDER ===== */
+  @keyframes snakeBorder{
+    0%{background-position:0% 50%}
+    100%{background-position:200% 50%}
+  }
+  .snake-border{
+    background:linear-gradient(90deg,var(--portal),var(--rick-blue),var(--cosmic),var(--morty),var(--portal));
+    background-size:200% 100%;
+    animation:snakeBorder 4s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ STARS BG ============ -->
+<div class="stars" id="stars"></div>
+
+<!-- ============ CURSOR PORTAL ============ -->
+<div class="cursor-portal" id="cursorPortal" style="display:none"></div>
+
+<!-- ============ NAV ============ -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="text-3xl float">🧪</div>
+      <h1 class="text-xl font-bold">MUJ<span class="text-yellow-300 glow-text-yellow">.CGPA</span></h1>
+    </div>
+    <div class="hidden md:flex gap-8 text-sm font-medium">
+      <a href="#home" class="hover:text-green-400 transition">Home</a>
+      <a href="#calculator" class="hover:text-green-400 transition">Calculator</a>
+      <a href="#add" class="hover:text-green-400 transition">Add Score</a>
+      <a href="#leaderboard" class="hover:text-green-400 transition">Leaderboard</a>
+    </div>
+    <div class="text-xs italic text-gray-400 hidden md:block">"Wubba Lubba Dub Dub!"</div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+  <!-- Portal rings -->
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+    <div class="portal-ring w-[28rem] h-[28rem]"></div>
+    <div class="portal-ring w-[22rem] h-[22rem]" style="animation-duration:8s;animation-direction:reverse"></div>
+    <div class="portal-ring w-[16rem] h-[16rem]" style="animation-duration:5s"></div>
+    <div class="portal-ring w-[10rem] h-[10rem]" style="animation-duration:4s;animation-direction:reverse"></div>
+  </div>
+
+  <div class="relative z-10 text-center px-6 max-w-5xl">
+    <div class="float mb-6 text-8xl md:text-9xl">🧪</div>
+    <h1 class="text-6xl md:text-9xl font-display mb-4 glitch glow-text-green" data-text="WUBBA LUBBA">WUBBA LUBBA</h1>
+    <h1 class="text-6xl md:text-9xl font-display mb-8 glitch glow-text-yellow" data-text="DUB DUB!">DUB DUB!</h1>
+    <p class="text-xl md:text-3xl text-gray-200 mb-3 font-display">MUJ CGPA LEADERBOARD</p>
+    <p class="text-sm md:text-base text-gray-400 italic mb-10 max-w-2xl mx-auto">
+      "Nobody exists on purpose. Nobody belongs anywhere. We're all going to die. Come watch TV." — Morty
+    </p>
+    <div class="flex gap-4 justify-center flex-wrap">
+      <a href="#leaderboard" class="btn-portal text-lg">🚀 View Leaderboard</a>
+      <a href="#calculator" class="btn-secondary text-lg">⚗️ Calculate CGPA</a>
+    </div>
+  </div>
+
+  <div class="scroll-ind">
+    <div class="text-green-400 text-3xl animate-bounce">▼</div>
+    <div class="text-xs text-gray-400 mt-2">Scroll to begin</div>
+  </div>
+</section>
+
+<!-- ============ MARQUEE ============ -->
+<div class="relative py-6 border-y border-green-400/20 overflow-hidden">
+  <div class="marquee text-2xl">
+    <span class="flex gap-12 items-center">
+      <span>🧪 WUBBA LUBBA DUB DUB</span>
+      <span>🚀 MUJ CGPA</span>
+      <span>� TOP 10% ARE RICKS</span>
+      <span>🎓 MANIPAL UNIVERSITY JAIPUR</span>
+      <span>🧪 SCIENCE IS ART</span>
+      <span>👾 AWWW GEEZ RICK</span>
+      <span>� WUBBA LUBBA DUB DUB</span>
+      <span>🚀 MUJ CGPA</span>
+      <span>🏆 TOP 10% ARE RICKS</span>
+      <span>🎓 MANIPAL UNIVERSITY JAIPUR</span>
+      <span>🧪 SCIENCE IS ART</span>
+      <span>👾 AWWW GEEZ RICK</span>
+    </span>
+  </div>
+</div>
+
+<!-- ============ CALCULATOR ============ -->
+<section id="calculator" class="relative py-24 px-6">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12">
+      <div class="text-7xl mb-4 float-slow">⚗️</div>
+      <h2 class="text-5xl md:text-7xl font-display glow-text-green mb-4">CGPA CALCULATOR</h2>
+      <p class="text-gray-400">Mix your grades like Rick mixes potions 🍻</p>
+    </div>
+
+    <div class="glass rounded-3xl p-6 md:p-12 pulse-glow">
+      <div id="subjectsContainer"></div>
+
+      <div class="flex gap-3 mt-6 flex-wrap">
+        <button onclick="addSubjectRow()" class="btn-portal">+ Add Subject</button>
+        <button onclick="calculateCGPA()" class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold px-6 py-3 rounded-lg hover:scale-105 transition">🧮 Calculate</button>
+        <button onclick="resetCalculator()" class="btn-secondary">Reset</button>
+      </div>
+
+      <div id="cgpaResult" class="mt-8 hidden">
+        <div class="text-center glass rounded-2xl p-8 border-2 border-green-400 relative overflow-hidden">
+          <div class="absolute inset-0 snake-border opacity-20"></div>
+          <div class="relative">
+            <div class="text-sm text-gray-400 mb-2 tracking-widest">YOUR CGPA</div>
+            <div id="cgpaValue" class="text-8xl font-display glow-text-green mb-2">0.00</div>
+            <div id="cgpaLabel" class="text-xl mt-2 font-display"></div>
+            <button onclick="useCGPA()" class="btn-portal mt-6">📤 Add to Leaderboard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ADD STUDENT ============ -->
+<section id="add" class="relative py-24 px-6">
+  <div class="max-w-2xl mx-auto">
+    <div class="text-center mb-12">
+      <div class="text-7xl mb-4 float">📝</div>
+      <h2 class="text-5xl md:text-7xl font-display glow-text-yellow mb-4">JOIN THE BOARD</h2>
+      <p class="text-gray-400">Show everyone who's the smartest Morty in class</p>
+    </div>
+
+    <div class="glass rounded-3xl p-6 md:p-12">
+      <div class="space-y-5">
+        <div>
+          <label class="block text-sm text-gray-400 mb-2 font-display tracking-wider">YOUR NAME</label>
+          <input type="text" id="studentName" placeholder="e.g., Raj Malhotra" class="input-field" maxlength="30">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-2 font-display tracking-wider">YEAR</label>
+            <select id="studentYear" class="input-field">
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2 font-display tracking-wider">CGPA</label>
+            <input type="number" id="studentCGPA" placeholder="e.g., 9.5" step="0.01" min="0" max="10" class="input-field">
+          </div>
+        </div>
+        <button onclick="addToLeaderboard()" class="btn-portal w-full text-lg mt-2">🚀 Submit to the Multiverse</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEADERBOARD ============ -->
+<section id="leaderboard" class="relative py-24 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-12">
+      <div class="text-7xl mb-4 float-slow">🏆</div>
+      <h2 class="text-5xl md:text-7xl font-display glow-text-green mb-4">THE LEADERBOARD</h2>
+      <p class="text-gray-400">The smartest minds across dimensions</p>
+    </div>
+
+    <!-- Year Filters -->
+    <div class="flex flex-wrap justify-center gap-3 mb-10">
+      <button onclick="filterYear('all')" class="year-tab active" data-year="all">🌌 All Years</button>
+      <button onclick="filterYear('1')" class="year-tab" data-year="1">🎒 1st Year</button>
+      <button onclick="filterYear('2')" class="year-tab" data-year="2">📚 2nd Year</button>
+      <button onclick="filterYear('3')" class="year-tab" data-year="3">🔬 3rd Year</button>
+      <button onclick="filterYear('4')" class="year-tab" data-year="4">🎓 4th Year</button>
+    </div>
+
+    <!-- Podium -->
+    <div id="podium" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 items-end"></div>
+
+    <!-- List -->
+    <div id="leaderboardList" class="space-y-3"></div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+      <div class="glass rounded-2xl p-6 text-center hover:scale-105 transition">
+        <div class="text-4xl mb-2">👥</div>
+        <div id="totalStudents" class="text-4xl font-display glow-text-green">0</div>
+        <div class="text-xs text-gray-400 mt-1 tracking-widest">MORTYS</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center hover:scale-105 transition">
+        <div class="text-4xl mb-2">📊</div>
+        <div id="avgCGPA" class="text-4xl font-display glow-text-yellow">0.00</div>
+        <div class="text-xs text-gray-400 mt-1 tracking-widest">AVG CGPA</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center hover:scale-105 transition">
+        <div class="text-4xl mb-2">🏆</div>
+        <div id="topScore" class="text-4xl font-display glow-text-green">0.00</div>
+        <div class="text-xs text-gray-400 mt-1 tracking-widest">HIGHEST</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center hover:scale-105 transition">
+        <div class="text-4xl mb-2">🧪</div>
+        <div id="ricksCount" class="text-4xl font-display glow-text-yellow">0</div>
+        <div class="text-xs text-gray-400 mt-1 tracking-widest">RICKS</div>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="text-center mt-8">
+      <button onclick="clearAllData()" class="text-xs text-red-400 hover:text-red-300 underline">⚠️ Reset All Data (with confirmation)</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUOTES ============ -->
+<section class="relative py-24 px-6">
+  <div class="max-w-3xl mx-auto text-center">
+    <div class="text-7xl mb-6 float">💭</div>
+    <div class="glass rounded-3xl p-8 md:p-12 relative overflow-hidden">
+      <div class="absolute -top-10 -right-10 text-9xl opacity-10">🧪</div>
+      <p id="quoteText" class="text-2xl md:text-4xl italic mb-4 font-display leading-relaxed"></p>
+      <p id="quoteAuthor" class="text-green-400 font-display text-xl"></p>
+    </div>
+    <button onclick="newQuote()" class="btn-portal mt-8">🎲 Portal to Next Quote</button>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="border-t border-green-400/20 py-10 px-6 text-center text-gray-400 relative">
+  <div class="float text-4xl mb-4">🧪</div>
+  <p class="mb-2">MUJ <span class="glow-text-green font-display">CGPA</span> Leaderboard — Built with 💚 by a Morty</p>
+  <p class="text-sm italic">"Science isn't about why, it's about why not?" — Rick</p>
+  <p class="text-xs mt-4 opacity-60">Made for Manipal University Jaipur • Inspired by Rick & Morty • All data stored locally</p>
+</footer>
+
+<!-- ============ NOTIFICATION ============ -->
+<div id="notification" class="fixed top-24 right-6 glass rounded-2xl px-6 py-4 z-50 pulse-glow hidden font-display"></div>
+
+<script>
+/* ============ STARS ============ */
+(function(){
+  const sc = document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random()*3 + 1;
+    s.style.width = size+'px';
+    s.style.height = size+'px';
+    s.style.top = Math.random()*100+'%';
+    s.style.left = Math.random()*100+'%';
+    s.style.animationDelay = Math.random()*3+'s';
+    s.style.animationDuration = (2+Math.random()*3)+'s';
+    sc.appendChild(s);
+  }
+})();
+
+/* ============ CURSOR PORTAL ============ */
+(function(){
+  const cp = document.getElementById('cursorPortal');
+  let isTouch = false;
+  document.addEventListener('touchstart',()=>isTouch=true);
+  document.addEventListener('mousemove',(e)=>{
+    if(isTouch)return;
+    cp.style.display='block';
+    cp.style.left=(e.clientX-20)+'px';
+    cp.style.top=(e.clientY-20)+'px';
+  });
+  document.addEventListener('mouseleave',()=>cp.style.display='none');
+})();
+
+/* ============ QUOTES ============ */
+const quotes = [
+  {t:"Wubba Lubba Dub Dub!",a:"— Rick Sanchez"},
+  {t:"Nobody exists on purpose. Nobody belongs anywhere. We're all going to die. Come watch TV.",a:"— Morty Smith"},
+  {t:"I'm not looking for judgment, Morty. I just want a fresh start.",a:"— Rick"},
+  {t:"Sometimes science is a lot more art than science.",a:"— Rick"},
+  {t:"I'm the smartest man in the universe!",a:"— Rick"},
+  {t:"What, so everyone's supposed to sleep every single night now?",a:"— Rick"},
+  {t:"I don't do magic, Morty, I do science.",a:"— Rick"},
+  {t:"Awww geez Rick...",a:"— Morty"},
+  {t:"Your mind makes it real.",a:"— Rick"},
+  {t:"Existence is pain. Deal with it.",a:"— Rick"},
+  {t:"That's the way the world works, Morty.",a:"— Rick"},
+  {t:"I'm not a hero. I'm a high-functioning sociopath.",a:"— Rick"},
+  {t:"Get your shit together, Morty.",a:"— Rick"},
+  {t:"You gotta do it for the science, Morty.",a:"— Rick"},
+  {t:"Life is about making mistakes and learning from them.",a:"— Morty"},
+];
+function newQuote(){
+  const q = quotes[Math.floor(Math.random()*quotes.length)];
+  document.getElementById('quoteText').textContent = `"${q.t}"`;
+  document.getElementById('quoteAuthor').textContent = q.a;
+}
+newQuote();
+
+/* ============ DATA ============ */
+const sampleStudents = [
+  {name:"Aarav Sharma",year:4,cgpa:9.87,date:Date.now()-100000},
+  {name:"Diya Patel",year:4,cgpa:9.82,date:Date.now()-200000},
+  {name:"Vihaan Gupta",year:3,cgpa:9.76,date:Date.now()-300000},
+  {name:"Ananya Singh",year:3,cgpa:9.71,date:Date.now()-400000},
+  {name:"Arjun Mehta",year:4,cgpa:9.65,date:Date.now()-500000},
+  {name:"Saanvi Reddy",year:2,cgpa:9.58,date:Date.now()-600000},
+  {name:"Reyansh Kumar",year:2,cgpa:9.52,date:Date.now()-700000},
+  {name:"Aadhya Joshi",year:1,cgpa:9.45,date:Date.now()-800000},
+  {name:"Krishna Verma",year:1,cgpa:9.38,date:Date.now()-900000},
+  {name:"Ishaan Roy",year:3,cgpa:9.31,date:Date.now()-1000000},
+  {name:"Pari Bhatia",year:2,cgpa:9.24,date:Date.now()-1100000},
+  {name:"Atharv Saxena",year:4,cgpa:9.18,date:Date.now()-1200000},
+  {name:"Myra Khanna",year:1,cgpa:9.12,date:Date.now()-1300000},
+  {name:"Advik Jain",year:3,cgpa:9.05,date:Date.now()-1400000},
+  {name:"Anvi Chopra",year:2,cgpa:8.97,date:Date.now()-1500000},
+  {name:"Kabir Malhotra",year:4,cgpa:8.89,date:Date.now()-1600000},
+  {name:"Aaradhya Rao",year:1,cgpa:8.82,date:Date.now()-1700000},
+  {name:"Sai Tiwari",year:3,cgpa:8.74,date:Date.now()-1800000},
+  {name:"Ayaansh Bansal",year:2,cgpa:8.65,date:Date.now()-1900000},
+  {name:"Navya Aggarwal",year:4,cgpa:8.55,date:Date.now()-2000000},
+  {name:"Dhruv Pandey",year:1,cgpa:8.42,date:Date.now()-2100000},
+  {name:"Pihu Sinha",year:3,cgpa:8.31,date:Date.now()-2200000},
+  {name:"Rudra Mishra",year:2,cgpa:8.18,date:Date.now()-2300000},
+  {name:"Aanya Yadav",year:4,cgpa:8.05,date:Date.now()-2400000},
+  {name:"Yash Chauhan",year:1,cgpa:7.92,date:Date.now()-2500000},
+  {name:"Ira Kapoor",year:3,cgpa:7.78,date:Date.now()-2600000},
+  {name:"Veer Kulkarni",year:2,cgpa:7.65,date:Date.now()-2700000},
+  {name:"Sara Nair",year:4,cgpa:7.52,date:Date.now()-2800000},
+  {name:"Aryan Desai",year:3,cgpa:7.38,date:Date.now()-2900000},
+  {name:"Tara Bhatt",year:1,cgpa:7.21,date:Date.now()-3000000},
+];
+
+let students = JSON.parse(localStorage.getItem('muj_students_v3')||'null');
+if(!students || students.length===0){
+  students = sampleStudents;
+  localStorage.setItem('muj_students_v3',JSON.stringify(students));
+}
+
+let currentFilter = 'all';
+let lastCGPA = 0;
+
+/* ============ CALCULATOR ============ */
+function addSubjectRow(){
+  const c = document.getElementById('subjectsContainer');
+  const row = document.createElement('div');
+  row.className='subject-row';
+  row.innerHTML=`
+    <input type="text" placeholder="Subject" class="input-field subject-name">
+    <input type="number" placeholder="Credits" class="input-field credits" min="0" step="0.5">
+    <select class="input-field grade">
+      <option value="">Grade</option>
+      <option value="10">O (Outstanding) - 10</option>
+      <option value="9">A+ (Excellent) - 9</option>
+      <option value="8.5">A (Very Good) - 8.5</option>
+      <option value="8">B+ (Good) - 8</option>
+      <option value="7">B (Above Avg) - 7</option>
+      <option value="6">C (Average) - 6</option>
+      <option value="5">D (Pass) - 5</option>
+      <option value="0">F (Fail) - 0</option>
+    </select>
+    <button onclick="this.parentElement.remove();recheck()" class="text-red-400 hover:text-red-300 text-3xl px-2">×</button>
+  `;
+  c.appendChild(row);
+}
+function recheck(){
+  if(document.getElementById('subjectsContainer').children.length===0) addSubjectRow();
+}
+function calculateCGPA(){
+  const rows = document.querySelectorAll('.subject-row');
+  let tc=0,tp=0;
+  rows.forEach(r=>{
+    const cr = parseFloat(r.querySelector('.credits').value);
+    const gr = parseFloat(r.querySelector('.grade').value);
+    if(!isNaN(cr)&&!isNaN(gr)&&cr>0){tc+=cr;tp+=cr*gr}
+  });
+  if(tc>0){
+    const cgpa = tp/tc;
+    lastCGPA = cgpa;
+    document.getElementById('cgpaResult').classList.remove('hidden');
+    document.getElementById('cgpaValue').textContent = cgpa.toFixed(2);
+    let label = '';
+    if(cgpa>=9.5) label='🧪🧪🧪 YOU ARE A RICK!!! GENIUS LEVEL!!!';
+    else if(cgpa>=9) label='🧪 You are a RICK! Smarter than most Mortys';
+    else if(cgpa>=8) label='🌟 Smart Morty — Summer course material?';
+    else if(cgpa>=7) label='👍 Decent Morty — Keep going';
+    else if(cgpa>=6) label='📚 Average Morty — Study harder';
+    else label='� Yikes... portal to another universe?';
+    document.getElementById('cgpaLabel').textContent = label;
+
+    gsap.fromTo('#cgpaValue',{scale:.5,opacity:0},{scale:1,opacity:1,duration:.8,ease:'back.out(1.7)'});
+
+    // Confetti for high scores
+    if(cgpa>=9) launchConfetti();
+  } else {
+    notify('⚠️ Add at least one subject with credits & grade!','red');
+  }
+}
+function resetCalculator(){
+  document.getElementById('subjectsContainer').innerHTML='';
+  for(let i=0;i<3;i++) addSubjectRow();
+  document.getElementById('cgpaResult').classList.add('hidden');
+}
+function useCGPA(){
+  document.getElementById('studentCGPA').value = lastCGPA.toFixed(2);
+  document.getElementById('add').scrollIntoView({behavior:'smooth'});
+  gsap.from('#add',{duration:.5,backgroundColor:'rgba(68,255,136,.1)'});
+}
+
+/* ============ CONFETTI ============ */
+function launchConfetti(){
+  const colors = ['#44ff88','#00b4d8','#f4d35e','#9d4edd','#ff9f1c'];
+  for(let i=0;i<50;i++){
+    const c = document.createElement('div');
+    c.className='confetti';
+    c.style.left = Math.random()*100+'%';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDelay = Math.random()*0.5+'s';
+    c.style.animationDuration = (2+Math.random()*2)+'s';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4000);
+  }
+}
+
+/* ============ ADD STUDENT ============ */
+function addToLeaderboard(){
+  const name = document.getElementById('studentName').value.trim();
+  const year = document.getElementById('studentYear').value;
+  const cgpa = parseFloat(document.getElementById('studentCGPA').value);
+
+  if(!name){notify('⚠️ Enter your name, Morty!','red');return}
+  if(!name.replace(/\s/g,'').length){notify('⚠️ Name cannot be empty!','red');return}
+  if(isNaN(cgpa)||cgpa<0||cgpa>10){notify('⚠️ CGPA must be between 0 and 10!','red');return}
+
+  // Check duplicates
+  const exists = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+  if(exists){
+    if(!confirm(`${name} already exists. Update their CGPA?`)){
+      return;
+    }
+    exists.cgpa = cgpa;
+    exists.year = parseInt(year);
+    exists.date = Date.now();
+  } else {
+    students.push({name,year:parseInt(year),cgpa,date:Date.now()});
+  }
+
+  localStorage.setItem('muj_students_v3',JSON.stringify(students));
+  document.getElementById('studentName').value='';
+  document.getElementById('studentCGPA').value='';
+  notify(`🚀 ${name} added to the multiverse!`);
+  renderLeaderboard();
+  setTimeout(()=>document.getElementById('leaderboard').scrollIntoView({behavior:'smooth'}),300);
+
+  if(cgpa>=9) launchConfetti();
+}
+
+/* ============ NOTIFICATIONS ============ */
+let notifTimer;
+function notify(msg,color='green'){
+  const n = document.getElementById('notification');
+  n.textContent = msg;
+  n.style.borderColor = color==='green'?'#44ff88':'#ff4444';
+  n.style.boxShadow = color==='green'?'0 0 30px rgba(68,255,136,.6)':'0 0 30px rgba(255,68,68,.6)';
+  n.classList.remove('hidden');
+  gsap.fromTo(n,{x:400,opacity:0},{x:0,opacity:1,duration:.5,ease:'back.out(1.7)'});
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(()=>{
+    gsap.to(n,{x:400,opacity:0,duration:.4,onComplete:()=>n.classList.add('hidden')});
+  },3000);
+}
+
+/* ============ FILTER ============ */
+function filterYear(y){
+  currentFilter = y;
+  document.querySelectorAll('.year-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`[data-year="${y}"]`).classList.add('active');
+  renderLeaderboard();
+}
+
+/* ============ RENDER LEADERBOARD ============ */
+function renderLeaderboard(){
+  let filtered = students.filter(s=>currentFilter==='all'||s.year===parseInt(currentFilter));
+  filtered.sort((a,b)=>b.cgpa-a.cgpa);
+
+  const top10 = Math.max(1,Math.ceil(filtered.length*0.1));
+
+  // ===== PODIUM =====
+  const podium = document.getElementById('podium');
+  podium.innerHTML = '';
+  if(filtered.length>=3){
+    const order = [{idx:1,rank:2},{idx:0,rank:1},{idx:2,rank:3}];
+    const config = [
+      {height:'h-48',grad:'from-gray-300 to-gray-600',emoji:'🥈',label:'#2'},
+      {height:'h-64',grad:'from-yellow-300 to-orange-500',emoji:'🥇',label:'#1'},
+      {height:'h-40',grad:'from-orange-400 to-orange-700',emoji:'🥉',label:'#3'}
+    ];
+    order.forEach((o,i)=>{
+      const s = filtered[o.idx];
+      if(!s) return;
+      const isRick = o.rank <= top10;
+      const c = config[i];
+      const div = document.createElement('div');
+      div.className=`podium-place glass rounded-2xl p-6 text-center border-2 ${isRick?'border-green-400':'border-yellow-400/50'}`;
+      div.innerHTML=`
+        <div class="text-7xl mb-3 trophy">${c.emoji}</div>
+        <div class="text-xs text-gray-400 mb-1 font-display tracking-widest">${c.label}</div>
+        <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-3xl font-display ${isRick?'avatar-rick':'avatar-morty'} mb-3">${s.name.charAt(0)}</div>
+        <div class="font-bold text-lg mb-1 truncate">${s.name}</div>
+        <div class="text-xs text-gray-400 mb-3">Year ${s.year}</div>
+        <div class="text-4xl font-display glow-text-green">${s.cgpa.toFixed(2)}</div>
+        <div class="text-xs mt-3 font-display tracking-widest ${isRick?'text-green-400':'text-yellow-400'}">${isRick?'🧪 RICK TIER':'🙋 MORTY TIER'}</div>
+      `;
+      podium.appendChild(div);
+    });
+  } else if(filtered.length>0){
+    podium.innerHTML = `<div class="col-span-1 md:col-span-3 text-center glass rounded-2xl p-8 text-gray-400 font-display">Need at least 3 students for the podium! Add more Mortys 👀</div>`;
+  } else {
+    podium.innerHTML = `<div class="col-span-1 md:col-span-3 text-center glass rounded-2xl p-8 text-gray-400 font-display">No students here yet. Be the first!</div>`;
+  }
+
+  // ===== LIST =====
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '';
+  filtered.forEach((s,idx)=>{
+    const rank = idx+1;
+    const isTop = idx < top10;
+    let medal = '';
+    if(rank===1) medal='🥇';
+    else if(rank===2) medal='🥈';
+    else if(rank===3) medal='🥉';
+    else if(isTop) medal='🏅';
+
+    const row = document.createElement('div');
+    row.className=`glass rounded-xl p-4 flex items-center gap-4 transition hover:scale-[1.02] cursor-pointer ${isTop?'border-l-4 border-green-400':'border-l-4 border-yellow-400/30'}`;
+    row.style.opacity = '0';
+    row.innerHTML=`
+      <div class="rank-badge ${isTop?'avatar-rick':'avatar-morty'}">${rank}</div>
+      <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${isTop?'avatar-rick':'avatar-morty'} flex-shrink-0">${s.name.charAt(0)}</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold truncate flex items-center gap-2 flex-wrap">
+          <span>${s.name}</span>
+          ${medal?`<span class="trophy text-xl">${medal}</span>`:''}
+        </div>
+        <div class="text-xs text-gray-400 mt-1">
+          <span class="font-display tracking-wider">YEAR ${s.year}</span>
+          <span class="mx-2">•</span>
+          <span class="${isTop?'text-green-400':'text-yellow-400'} font-display tracking-wider">${isTop?'🧪 RICK':'🙋 MORTY'}</span>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-3xl font-display ${isTop?'glow-text-green':'glow-text-yellow'}">${s.cgpa.toFixed(2)}</div>
+        <div class="text-xs text-gray-400 tracking-widest">CGPA</div>
+      </div>
+    `;
+    row.addEventListener('click',()=>{
+      if(confirm(`Delete ${s.name} from leaderboard?`)){
+        students = students.filter(x=>x!==s);
+        localStorage.setItem('muj_students_v3',JSON.stringify(students));
+        renderLeaderboard();
+        notify('🗑️ Student removed');
+      }
+    });
+    list.appendChild(row);
+    // Stagger animation
+    gsap.to(row,{opacity:1,y:0,duration:.4,delay:idx*.03,ease:'power2.out'});
+  });
+
+  if(filtered.length===0 && !document.getElementById('leaderboardList').children.length){
+    list.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-400 font-display">No students yet. Be the first to join! 🚀</div>';
+  }
+
+  // ===== STATS =====
+  gsap.to({val:0},{val:filtered.length,duration:1,onUpdate:function(){
+    document.getElementById('totalStudents').textContent = Math.round(this.target.val);
+  }});
+  const avg = filtered.length>0 ? filtered.reduce((a,b)=>a+b.cgpa,0)/filtered.length : 0;
+  gsap.to({val:0},{val:avg,duration:1,onUpdate:function(){
+    document.getElementById('avgCGPA').textContent = this.target.val.toFixed(2);
+  }});
+  gsap.to({val:0},{val:filtered.length>0?filtered[0].cgpa:0,duration:1,onUpdate:function(){
+    document.getElementById('topScore').textContent = this.target.val.toFixed(2);
+  }});
+  document.getElementById('ricksCount').textContent = top10;
+}
+
+/* ============ CLEAR DATA ============ */
+function clearAllData(){
+  if(confirm('�️ This will reset ALL leaderboard data. Are you sure?')){
+    if(confirm('� Really really sure? This cannot be undone!')){
+      localStorage.removeItem('muj_students_v3');
+      students = sampleStudents;
+      localStorage.setItem('muj_students_v3',JSON.stringify(students));
+      renderLeaderboard();
+      notify('✨ Universe reset complete!');
+    }
+  }
+}
+
+/* ============ INIT ============ */
+addSubjectRow();
+addSubjectRow();
+addSubjectRow();
+renderLeaderboard();
+
+/* ============ GSAP SCROLL ANIMATIONS ============ */
+gsap.registerPlugin(ScrollTrigger);
+gsap.utils.toArray('section h2').forEach(h=>{
+  gsap.fromTo(h,{y:50,opacity:0},{y:0,opacity:1,duration:1,scrollTrigger:{trigger:h,start:'top 85%'}});
+});
+gsap.from('.float',{duration:1,scale:0,delay:.2,stagger:.2,ease:'back.out(1.7)'});
+
+/* ============ BUTTON RIPPLE ============ */
+document.querySelectorAll('.btn-portal, .year-tab, button').forEach(b=>{
+  b.addEventListener('click',function(e){
+    const r = document.createElement('span');
+    r.className='ripple-effect';
+    const rect = this.getBoundingClientRect();
+    const size = Math.max(rect.width,rect.height);
+    r.style.width=r.style.height=size+'px';
+    r.style.left=(e.clientX-rect.left-size/2)+'px';
+    r.style.top=(e.clientY-rect.top-size/2)+'px';
+    this.style.position='relative';
+    this.style.overflow='hidden';
+    this.appendChild(r);
+    setTimeout(()=>r.remove(),600);
+  });
+});
+</script>
+</body>
+</html>

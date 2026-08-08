@@ -1,0 +1,36 @@
+// Program 3: This program converts temperature between Fahrenheit and Centigrade.
+#include <stdio.h>
+
+int main() {
+    float fahrenheit, centigrade, celsiusToF, fahrenheitFromC;
+    int choice;
+
+    printf("1. Convert Fahrenheit to Centigrade\n");
+    printf("2. Convert Centigrade to Fahrenheit\n");
+    printf("Enter your choice (1 or 2): ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        printf("Enter temperature in Fahrenheit: ");
+        scanf("%f", &fahrenheit);
+
+        centigrade = (5.0 / 9.0) * (fahrenheit - 32);
+
+        printf("%.2f F = %.2f C\n", fahrenheit, centigrade);
+    }
+    else if (choice == 2) {
+        printf("Enter temperature in Centigrade: ");
+        scanf("%f", &celsiusToF);
+
+        fahrenheitFromC = (9.0 / 5.0) * celsiusToF + 32;
+
+        printf("%.2f C = %.2f F\n", celsiusToF, fahrenheitFromC);
+    }
+    else {
+        printf("Invalid choice\n");
+    }
+
+    printf("Program 3 done\n");
+
+    return 0;
+}
